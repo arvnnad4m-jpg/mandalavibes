@@ -44,7 +44,6 @@
 
     <div id="lobby" class="max-w-md mx-auto p-6 hidden">
         <div class="mt-12"></div>
-
         <div class="flex flex-col items-center mb-10">
             <div class="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-sm mb-4">
                 <img src="https://raw.githubusercontent.com/arvnnad4m-jpg/r4ndom/cd4d079ce81513a6b5a341e6c5bcdb7113ac5a37/75282-removebg-preview.png" alt="Bunda Profile" class="w-full h-full object-cover">
@@ -125,7 +124,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyALhzck7t5zIZCQ5boOwTEUSKNKWMoc_Yo",
@@ -229,9 +228,11 @@
             document.getElementById('cat-title').innerText = label;
 
             const container = document.getElementById('cat-list-container');
-            const filtered = allData.filter(i => i.kategori === kat);
+            // FILTER: Hanya tampilkan yang kategori cocok DAN belum di-arsipkan
+            const filtered = allData.filter(i => i.kategori === kat && !i.isArchived);
             
-            let totalKat = filtered.reduce((sum, item) => sum + item.nominal, 0);
+            // Total tetap dihitung dari semua (termasuk yang diarsip) agar saldo tidak berubah
+            let totalKat = allData.filter(i => i.kategori === kat).reduce((sum, item) => sum + item.nominal, 0);
             document.getElementById('cat-total').innerText = "Total Penggunaan: Rp " + totalKat.toLocaleString('id-ID');
 
             container.innerHTML = filtered.length ? '' : '<p class="text-center py-20 text-gray-300 italic text-sm font-light">Belum ada catatan</p>';
@@ -246,7 +247,10 @@
                     </div>
                     <div class="text-right">
                         <p class="text-lg font-semibold text-gray-600">Rp ${item.nominal.toLocaleString('id-ID')}</p>
-                        <button onclick="window.hapusData('${item.id}')" class="text-[9px] text-red-300 font-bold uppercase tracking-widest mt-1">Hapus</button>
+                        <div class="flex gap-2 justify-end mt-1">
+                             <button onclick="window.arsipkanData('${item.id}')" class="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Sembunyikan</button>
+                             <button onclick="window.hapusData('${item.id}')" class="text-[9px] text-red-300 font-bold uppercase tracking-widest">Hapus</button>
+                        </div>
                     </div>
                 `;
                 container.appendChild(div);
@@ -254,8 +258,15 @@
         };
 
         window.hapusData = (id) => {
-            if(confirm("Hapus catatan ini?")) {
+            if(confirm("Hapus catatan ini? (Peringatan: Saldo Bunda akan kembali/berubah)")) {
                 remove(ref(db, `users/${userUID}/${id}`));
+                window.tutupHalaman();
+            }
+        };
+
+        window.arsipkanData = (id) => {
+            if(confirm("Sembunyikan catatan ini? (Saldo Bunda TETAP, hanya catatan yang hilang)")) {
+                update(ref(db, `users/${userUID}/${id}`), { isArchived: true });
                 window.tutupHalaman();
             }
         };
@@ -278,6 +289,7 @@
                 tipe: currentMode,
                 ket: ket,
                 nominal: nominal,
+                isArchived: false,
                 kategori: currentMode === 'Pemasukan' ? 'Saldo Masuk' : document.getElementById('input-kategori').value
             });
 
