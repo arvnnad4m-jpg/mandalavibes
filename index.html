@@ -8,11 +8,16 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #F8F7F4; color: #4A4947; }
-        .soft-shadow { box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04); }
+        .soft-shadow { box-shadow: 0 10px 40px rgba(0, 0, 0, 0.03); }
         .bg-elegant { background-color: #FAF9F6; }
-        .btn-primary { background-color: #8E8B82; color: white; transition: 0.3s; }
+        .btn-primary { background-color: #8E8B82; color: white; transition: all 0.3s ease; }
+        .btn-primary:hover { background-color: #6B6861; transform: translateY(-2px); }
         .hidden { display: none; }
-        input { background: transparent !important; }
+        input, select { background: transparent !important; }
+        .card-item { transition: transform 0.2s; }
+        .card-item:active { transform: scale(0.98); }
+        /* Hilangkan panah default select untuk tampilan lebih clean */
+        select { appearance: none; }
     </style>
 </head>
 <body class="min-h-screen">
@@ -20,7 +25,7 @@
     <div id="page-login" class="max-w-md mx-auto p-8 pt-20">
         <div class="text-center mb-12">
             <h2 class="text-4xl font-light text-gray-800 mb-2">Selamat Datang</h2>
-            <p class="text-xs uppercase tracking-widest text-gray-400">Masuk ke Bunda Finance</p>
+            <p class="text-xs uppercase tracking-widest text-gray-400 font-semibold">Premium Finance Manager</p>
         </div>
         <div class="bg-white p-8 rounded-[2.5rem] soft-shadow space-y-6">
             <input type="email" id="login-email" placeholder="Email Bunda" class="w-full border-b border-gray-100 py-3 focus:outline-none">
@@ -35,63 +40,81 @@
     <div id="lobby" class="max-w-md mx-auto p-6 hidden">
         <header class="mt-8 mb-10 flex justify-between items-center px-2">
             <div>
-                <h1 class="text-[10px] uppercase tracking-widest text-gray-400">Cloud Sync Active</h1>
+                <h1 class="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Cloud Sync Active</h1>
                 <h2 class="text-2xl font-light text-gray-800">Bunda Finance</h2>
             </div>
-            <button onclick="window.handleLogout()" class="text-[10px] text-red-300 uppercase font-bold">Keluar</button>
+            <button onclick="window.handleLogout()" class="text-[10px] text-red-400 uppercase font-bold tracking-tighter">Keluar</button>
         </header>
 
-        <div class="bg-elegant p-8 rounded-3xl soft-shadow border border-gray-100 mb-8 text-center">
-            <p class="text-sm text-gray-500 mb-2">Saldo Anda</p>
-            <h3 id="lobby-saldo" class="text-3xl font-semibold text-gray-800 tracking-tight">Rp 0</h3>
+        <div class="bg-elegant p-10 rounded-[2.5rem] soft-shadow border border-gray-50 mb-8 text-center">
+            <p class="text-xs text-gray-400 uppercase tracking-widest mb-2 font-semibold">Total Saldo</p>
+            <h3 id="lobby-saldo" class="text-4xl font-semibold text-gray-800 tracking-tight">Rp 0</h3>
         </div>
 
         <div class="grid grid-cols-2 gap-4 mb-10">
-            <button onclick="window.bukaForm('Pemasukan')" class="bg-white p-6 rounded-2xl border border-gray-100 soft-shadow active:scale-95 transition">
-                <p class="text-xs font-medium text-gray-400 uppercase">Tambah</p>
-                <p class="text-lg font-semibold text-gray-700">Masuk</p>
+            <button onclick="window.bukaForm('Pemasukan')" class="bg-white p-6 rounded-3xl border border-gray-50 soft-shadow active:scale-95 transition text-left">
+                <p class="text-xs font-medium text-gray-400 uppercase mb-1">Tambah</p>
+                <p class="text-lg font-semibold text-gray-700">Pemasukan</p>
             </button>
-            <button onclick="window.bukaForm('Pengeluaran')" class="bg-white p-6 rounded-2xl border border-gray-100 soft-shadow active:scale-95 transition">
-                <p class="text-xs font-medium text-gray-400 uppercase">Tambah</p>
-                <p class="text-lg font-semibold text-gray-700">Keluar</p>
+            <button onclick="window.bukaForm('Pengeluaran')" class="bg-white p-6 rounded-3xl border border-gray-50 soft-shadow active:scale-95 transition text-left">
+                <p class="text-xs font-medium text-gray-400 uppercase mb-1">Tambah</p>
+                <p class="text-lg font-semibold text-gray-700">Pengeluaran</p>
             </button>
         </div>
 
         <div class="space-y-3">
             <h4 class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4 px-2">Kategori</h4>
-            <div id="category-btns" class="space-y-3">
-                </div>
+            <div id="category-btns" class="grid grid-cols-1 gap-3"></div>
         </div>
     </div>
 
     <div id="page-category" class="max-w-md mx-auto p-6 hidden">
         <button onclick="window.tutupHalaman()" class="text-gray-400 mb-8 text-xs uppercase tracking-widest">← Kembali</button>
-        <h2 id="cat-title" class="text-4xl font-light text-gray-800 mb-8 underline decoration-gray-100">...</h2>
+        <div class="mb-8">
+            <h2 id="cat-title" class="text-4xl font-light text-gray-800 mb-2 underline decoration-gray-100 underline-offset-8">...</h2>
+            <p id="cat-total" class="text-sm text-gray-400 font-medium"></p>
+        </div>
         <div id="cat-list-container" class="space-y-4"></div>
     </div>
 
     <div id="page-form" class="max-w-md mx-auto p-6 hidden">
         <button onclick="window.tutupHalaman()" class="text-gray-400 mb-8 text-xs uppercase tracking-widest">← Batal</button>
         <div class="bg-white p-10 rounded-[2.5rem] soft-shadow space-y-8">
-            <input type="text" id="input-ket" placeholder="Keterangan" class="w-full border-b border-gray-100 py-2 focus:outline-none text-lg">
-            <input type="number" id="input-nominal" placeholder="Nominal Rp" class="w-full border-b border-gray-100 py-2 text-3xl font-semibold focus:outline-none">
-            <div id="group-kategori">
-                <select id="input-kategori" class="w-full border-b border-gray-100 py-2 bg-transparent">
+            <div class="space-y-1">
+                <label class="text-[10px] uppercase font-bold text-gray-400 tracking-widest">Keterangan</label>
+                <input type="text" id="input-ket" placeholder="Keterangan Transaksi" class="w-full border-b border-gray-100 py-2 focus:outline-none text-lg">
+            </div>
+            
+            <div class="space-y-1">
+                <label class="text-[10px] uppercase font-bold text-gray-400 tracking-widest">Nominal</label>
+                <input type="text" id="input-nominal" placeholder="0" class="w-full border-b border-gray-100 py-2 text-3xl font-semibold focus:outline-none">
+            </div>
+
+            <div class="space-y-1">
+                <label class="text-[10px] uppercase font-bold text-gray-400 tracking-widest">Tanggal</label>
+                <input type="date" id="input-tgl" class="w-full border-b border-gray-100 py-2 focus:outline-none text-gray-600">
+            </div>
+
+            <div id="group-kategori" class="space-y-1">
+                <label class="text-[10px] uppercase font-bold text-gray-400 tracking-widest">Pilih Kategori</label>
+                <select id="input-kategori" class="w-full border-b border-gray-100 py-2 bg-transparent focus:outline-none text-gray-700">
                     <option value="Dapur">Dapur</option>
                     <option value="Anak2">Anak-anak</option>
                     <option value="Kantor">Kantor</option>
                     <option value="Kebersihan">Kebersihan</option>
                     <option value="Kesehatan">Kesehatan</option>
+                    <option value="Lainnya">Lainnya</option>
                 </select>
             </div>
-            <button onclick="window.simpanData()" class="w-full btn-primary py-5 rounded-2xl font-semibold uppercase tracking-widest text-xs">Simpan Data</button>
+            
+            <button onclick="window.simpanData()" class="w-full btn-primary py-5 rounded-2xl font-semibold uppercase tracking-widest text-xs shadow-lg shadow-gray-200">Simpan Data</button>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyALhzck7t5zIZCQ5boOwTEUSKNKWMoc_Yo",
@@ -111,7 +134,16 @@
         let allData = [];
         let currentMode = 'Pemasukan';
 
-        // AUTH TRACKER
+        // FORMAT RUPIAH AUTO
+        const inputNominal = document.getElementById('input-nominal');
+        inputNominal.addEventListener('keyup', function() {
+            let val = this.value.replace(/\D/g, '');
+            this.value = val ? parseInt(val).toLocaleString('id-ID') : '';
+        });
+
+        // SET DEFAULT DATE
+        document.getElementById('input-tgl').valueAsDate = new Date();
+
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 userUID = user.uid;
@@ -124,27 +156,30 @@
             }
         });
 
-        // LOGIN & REGISTER
         window.handleLogin = () => {
             const email = document.getElementById('login-email').value;
             const pass = document.getElementById('login-pass').value;
-            signInWithEmailAndPassword(auth, email, pass).catch(err => alert("Gagal masuk: " + err.message));
+            signInWithEmailAndPassword(auth, email, pass).catch(err => alert("Gagal: " + err.message));
         };
 
         window.handleRegister = () => {
             const email = document.getElementById('login-email').value;
             const pass = document.getElementById('login-pass').value;
-            createUserWithEmailAndPassword(auth, email, pass).then(() => alert("Akun Bunda berhasil dibuat!")).catch(err => alert("Gagal daftar: " + err.message));
+            createUserWithEmailAndPassword(auth, email, pass).then(() => alert("Sukses!")).catch(err => alert("Gagal: " + err.message));
         };
 
         window.handleLogout = () => signOut(auth);
 
-        // DATABASE LOAD
         function loadData() {
             const userRef = ref(db, 'users/' + userUID);
             onValue(userRef, (snapshot) => {
                 const data = snapshot.val();
-                allData = data ? Object.values(data).reverse() : [];
+                if (data) {
+                    allData = Object.entries(data).map(([id, val]) => ({ id, ...val }));
+                    allData.sort((a, b) => new Date(b.rawDate) - new Date(a.rawDate));
+                } else {
+                    allData = [];
+                }
                 updateSaldo();
             });
         }
@@ -158,60 +193,101 @@
             document.getElementById('lobby-saldo').innerText = "Rp " + total.toLocaleString('id-ID');
         }
 
-        // NAVIGASI & SIMPAN (Global Functions)
         window.bukaForm = (mode) => {
             currentMode = mode;
             document.getElementById('lobby').classList.add('hidden');
             document.getElementById('page-form').classList.remove('hidden');
-            document.getElementById('group-kategori').style.display = mode === 'Pemasukan' ? 'none' : 'block';
+            document.getElementById('group-kategori').classList.toggle('hidden', mode === 'Pemasukan');
+            document.getElementById('input-tgl').valueAsDate = new Date();
         };
 
         window.tutupHalaman = () => {
-            document.getElementById('page-form').classList.add('hidden');
-            document.getElementById('page-category').classList.add('hidden');
+            document.querySelectorAll('#lobby, #page-form, #page-category').forEach(el => el.classList.add('hidden'));
             document.getElementById('lobby').classList.remove('hidden');
         };
 
         window.bukaBerandaKategori = (kat) => {
             document.getElementById('lobby').classList.add('hidden');
-            document.getElementById('page-category').classList.remove('hidden');
-            document.getElementById('cat-title').innerText = kat === 'Anak2' ? 'Anak-anak' : kat;
+            const pageCat = document.getElementById('page-category');
+            pageCat.classList.remove('hidden');
+            
+            const label = document.querySelector(`#cat-btn-${kat} .cat-label`)?.innerText || kat;
+            document.getElementById('cat-title').innerText = label;
+
             const container = document.getElementById('cat-list-container');
             const filtered = allData.filter(i => i.kategori === kat);
-            container.innerHTML = filtered.length ? '' : '<p class="text-center py-10 text-gray-300 italic">Belum ada data</p>';
+            
+            let totalKat = filtered.reduce((sum, item) => sum + item.nominal, 0);
+            document.getElementById('cat-total').innerText = "Total Penggunaan: Rp " + totalKat.toLocaleString('id-ID');
+
+            container.innerHTML = filtered.length ? '' : '<p class="text-center py-20 text-gray-300 italic text-sm font-light">Belum ada catatan</p>';
+            
             filtered.forEach(item => {
-                container.innerHTML += `<div class="bg-white p-6 rounded-2xl border border-gray-50 flex justify-between items-center soft-shadow">
-                    <div><p class="font-semibold text-gray-700">${item.ket}</p><p class="text-[10px] text-gray-400">${item.tgl}</p></div>
-                    <p class="text-lg font-medium text-gray-600">Rp ${item.nominal.toLocaleString('id-ID')}</p>
-                </div>`;
+                const div = document.createElement('div');
+                div.className = "bg-white p-6 rounded-3xl border border-gray-50 flex justify-between items-center soft-shadow card-item";
+                div.innerHTML = `
+                    <div>
+                        <p class="font-bold text-gray-700 text-sm">${item.ket}</p>
+                        <p class="text-[10px] text-gray-400 uppercase tracking-widest mt-1">${item.tglDisplay}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-lg font-semibold text-gray-600">Rp ${item.nominal.toLocaleString('id-ID')}</p>
+                        <button onclick="window.hapusData('${item.id}')" class="text-[9px] text-red-300 font-bold uppercase tracking-widest mt-1">Hapus</button>
+                    </div>
+                `;
+                container.appendChild(div);
             });
+        };
+
+        window.hapusData = (id) => {
+            if(confirm("Hapus catatan ini?")) {
+                remove(ref(db, `users/${userUID}/${id}`));
+                window.tutupHalaman();
+            }
         };
 
         window.simpanData = () => {
             const ket = document.getElementById('input-ket').value;
-            const nominal = parseInt(document.getElementById('input-nominal').value);
-            if (!ket || !nominal) return alert("Isi yang lengkap ya Bunda");
+            const nominalRaw = document.getElementById('input-nominal').value.replace(/\./g, '');
+            const nominal = parseInt(nominalRaw);
+            const dateVal = document.getElementById('input-tgl').value;
             
+            if (!ket || !nominal || !dateVal) return alert("Lengkapi data transaksi.");
+            
+            const tglObj = new Date(dateVal);
+            const tglDisplay = tglObj.toLocaleDateString('id-ID', {day:'numeric', month:'short', year:'numeric'});
+
             const userRef = ref(db, 'users/' + userUID);
             push(userRef, {
-                tgl: new Date().toLocaleDateString('id-ID', {day:'numeric', month:'short'}),
+                rawDate: dateVal,
+                tglDisplay: tglDisplay,
                 tipe: currentMode,
                 ket: ket,
                 nominal: nominal,
                 kategori: currentMode === 'Pemasukan' ? 'Saldo Masuk' : document.getElementById('input-kategori').value
             });
+
             document.getElementById('input-ket').value = '';
             document.getElementById('input-nominal').value = '';
             window.tutupHalaman();
         };
 
-        // Render Category Buttons
-        const cats = [['Dapur','Dapur'], ['Anak-anak','Anak2'], ['Kantor','Kantor'], ['Kebersihan','Kebersihan'], ['Kesehatan','Kesehatan']];
+        // Render Category Buttons (Tanpa Emoji)
+        const cats = [
+            {id:'Dapur', label:'Dapur'}, 
+            {id:'Anak2', label:'Anak-anak'}, 
+            {id:'Kantor', label:'Kantor'}, 
+            {id:'Kebersihan', label:'Kebersihan'}, 
+            {id:'Kesehatan', label:'Kesehatan'},
+            {id:'Lainnya', label:'Lainnya'}
+        ];
         const catBtnBox = document.getElementById('category-btns');
         cats.forEach(c => {
-            catBtnBox.innerHTML += `<button onclick="window.bukaBerandaKategori('${c[1]}')" class="w-full bg-white p-5 rounded-2xl border border-gray-50 flex justify-between items-center soft-shadow active:bg-gray-50">
-                <span class="font-medium text-gray-700">${c[0]}</span><span class="text-gray-300">→</span>
-            </button>`;
+            catBtnBox.innerHTML += `
+                <button id="cat-btn-${c.id}" onclick="window.bukaBerandaKategori('${c.id}')" class="w-full bg-white p-5 rounded-2xl border border-gray-50 flex justify-between items-center soft-shadow active:bg-gray-50 transition">
+                    <span class="font-medium text-gray-700 cat-label text-sm uppercase tracking-wider">${c.label}</span>
+                    <span class="text-gray-200">→</span>
+                </button>`;
         });
     </script>
 </body>
