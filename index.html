@@ -16,7 +16,6 @@
         input, select { background: transparent !important; }
         .card-item { transition: transform 0.2s; }
         .card-item:active { transform: scale(0.98); }
-        /* Hilangkan panah default select untuk tampilan lebih clean */
         select { appearance: none; }
     </style>
 </head>
@@ -24,15 +23,22 @@
 
     <div id="page-login" class="max-w-md mx-auto p-8 pt-20">
         <div class="text-center mb-12">
-            <h2 class="text-4xl font-light text-gray-800 mb-2">Selamat Datang</h2>
+            <h2 class="text-4xl font-light text-gray-800 mb-2">Selamat Datang, Bunda!</h2>
             <p class="text-xs uppercase tracking-widest text-gray-400 font-semibold">Premium Finance Manager</p>
         </div>
         <div class="bg-white p-8 rounded-[2.5rem] soft-shadow space-y-6">
             <input type="email" id="login-email" placeholder="Email Bunda" class="w-full border-b border-gray-100 py-3 focus:outline-none">
             <input type="password" id="login-pass" placeholder="Password" class="w-full border-b border-gray-100 py-3 focus:outline-none">
+            
             <div class="pt-4 space-y-3">
                 <button onclick="window.handleLogin()" class="w-full btn-primary py-4 rounded-2xl font-semibold uppercase tracking-widest text-xs">Masuk</button>
-                <button onclick="window.handleRegister()" class="w-full border border-gray-100 py-4 rounded-2xl font-semibold uppercase tracking-widest text-xs text-gray-400">Daftar Akun Baru</button>
+                
+                <button onclick="window.handleGoogleLogin()" class="w-full border border-gray-200 py-4 rounded-2xl font-semibold uppercase tracking-widest text-[10px] text-gray-600 flex items-center justify-center gap-2">
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-4 h-4">
+                    Masuk dengan Google
+                </button>
+
+                <button onclick="window.handleRegister()" class="w-full py-2 font-semibold uppercase tracking-widest text-[10px] text-gray-400">Daftar Akun Baru</button>
             </div>
         </div>
     </div>
@@ -74,7 +80,8 @@
             <h2 id="cat-title" class="text-4xl font-light text-gray-800 mb-2 underline decoration-gray-100 underline-offset-8">...</h2>
             <p id="cat-total" class="text-sm text-gray-400 font-medium"></p>
         </div>
-        <div id="cat-list-container" class="space-y-4"></div>
+        <div id="cat-list-container" class="space-y-4 mb-10"></div>
+        <button onclick="window.tutupHalaman()" class="w-full border border-gray-200 py-4 rounded-2xl font-semibold uppercase tracking-widest text-[10px] text-gray-400">Kembali ke Beranda</button>
     </div>
 
     <div id="page-form" class="max-w-md mx-auto p-6 hidden">
@@ -87,7 +94,7 @@
             
             <div class="space-y-1">
                 <label class="text-[10px] uppercase font-bold text-gray-400 tracking-widest">Nominal</label>
-                <input type="text" id="input-nominal" placeholder="0" class="w-full border-b border-gray-100 py-2 text-3xl font-semibold focus:outline-none">
+                <input type="text" id="input-nominal" inputmode="numeric" placeholder="0" class="w-full border-b border-gray-100 py-2 text-3xl font-semibold focus:outline-none">
             </div>
 
             <div class="space-y-1">
@@ -113,7 +120,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
@@ -129,19 +136,18 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getDatabase(app);
+        const provider = new GoogleAuthProvider();
 
         let userUID = null;
         let allData = [];
         let currentMode = 'Pemasukan';
 
-        // FORMAT RUPIAH AUTO
         const inputNominal = document.getElementById('input-nominal');
         inputNominal.addEventListener('keyup', function() {
             let val = this.value.replace(/\D/g, '');
             this.value = val ? parseInt(val).toLocaleString('id-ID') : '';
         });
 
-        // SET DEFAULT DATE
         document.getElementById('input-tgl').valueAsDate = new Date();
 
         onAuthStateChanged(auth, (user) => {
@@ -160,6 +166,10 @@
             const email = document.getElementById('login-email').value;
             const pass = document.getElementById('login-pass').value;
             signInWithEmailAndPassword(auth, email, pass).catch(err => alert("Gagal: " + err.message));
+        };
+
+        window.handleGoogleLogin = () => {
+            signInWithPopup(auth, provider).catch(err => alert("Gagal Google Login: " + err.message));
         };
 
         window.handleRegister = () => {
@@ -272,7 +282,6 @@
             window.tutupHalaman();
         };
 
-        // Render Category Buttons (Tanpa Emoji)
         const cats = [
             {id:'Dapur', label:'Dapur'}, 
             {id:'Anak2', label:'Anak-anak'}, 
